@@ -15,7 +15,7 @@ import (
 
 func init() {
 	logrus.SetFormatter(&logrus.JSONFormatter{
-		TimestampFormat: "2006-01-02 15:04:05",
+		TimestampFormat: "2024-01-02 15:04:05",
 	})
 	logrus.SetReportCaller(false)
 }
@@ -58,7 +58,7 @@ func setOutPutFile(level logrus.Level, logName string) {
 		}
 	}
 
-	timeStr := time.Now().Format("2006-01-02")
+	timeStr := time.Now().Format("2024-01-02")
 	fileName := path.Join("./runtime/log", logName+"_"+timeStr+".log")
 
 	var err error
@@ -81,7 +81,7 @@ func LoggerToFile() gin.LoggerConfig {
 		}
 	}
 
-	timeStr := time.Now().Format("2006-01-02")
+	timeStr := time.Now().Format("2024-01-02")
 	fileName := path.Join("./runtime/log", "success_"+timeStr+".log")
 
 	os.Stderr, _ = os.OpenFile(fileName, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0644)
@@ -89,7 +89,7 @@ func LoggerToFile() gin.LoggerConfig {
 	var conf = gin.LoggerConfig{
 		Formatter: func(params gin.LogFormatterParams) string {
 			return fmt.Sprintf("%s - %s \"%s %s %s %d \"%s\" %s\"%s\"\n",
-				params.TimeStamp.Format("2006-01-02 15:04:06"),
+				params.TimeStamp.Format("2024-01-02 15:04:06"),
 				params.ClientIP,
 				params.Method,
 				params.Path,
@@ -117,7 +117,7 @@ func Recover(c *gin.Context) {
 				}
 			}
 
-			timeStr := time.Now().Format("2006-01-02")
+			timeStr := time.Now().Format("2024-01-02")
 			fileName := path.Join("./runtime/log", "err_"+timeStr+".log")
 
 			f, errFile := os.OpenFile(fileName, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0644)
@@ -126,7 +126,7 @@ func Recover(c *gin.Context) {
 				fmt.Println(errFile)
 			}
 
-			timeFileStr := time.Now().Format("2006-01-02 15:04:05")
+			timeFileStr := time.Now().Format("2024-01-02 15:04:05")
 			f.WriteString("panic error time:" + timeFileStr + "\n")
 			f.WriteString(fmt.Sprintf("%v", err) + "\n")
 			f.WriteString("stacktrace from panic:" + string(debug.Stack()) + "\n")
