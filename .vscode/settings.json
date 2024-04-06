@@ -1,0 +1,13 @@
+{
+  // 需要在vscode中下载code spell checker插件
+  "cSpell.words": [
+    "Writeln",
+    "logrus",
+    "sirupsen",
+    "Writefln",
+    "Writef",
+    "gonic",
+    "gorm",
+    "Rctx",
+  ]
+}
