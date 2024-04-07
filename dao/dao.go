@@ -26,7 +26,6 @@ func init() {
 
 	// 设置连接池
 	sqlDB, err := Db.DB()
-
 	if err != nil {
 		logger.Error(map[string]interface{}{"database pool error": err.Error()})
 	}

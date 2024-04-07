@@ -1,13 +1,19 @@
 package main
 
-import "github.com/gin-gonic/gin"
+import (
+	"blog-gin/dao"
+	models "blog-gin/models/systems"
+	"blog-gin/pkg/logger"
+	"blog-gin/router"
+)
 
 func main() {
-	r := gin.Default()
-	r.GET("/ping", func(c *gin.Context) {
-		c.JSON(200, gin.H{
-			"message": "pong",
-		})
-	})
-	r.Run(":9999") // 监听并在 0.0.0.0:8080 上启动服务
+	err := dao.Db.AutoMigrate(&models.User{})
+	if err != nil {
+		println(err)
+		logger.Error(map[string]interface{}{"auto migrate db error": err.Error()})
+	}
+
+	r := router.Router()
+	r.Run(":9999")
 }

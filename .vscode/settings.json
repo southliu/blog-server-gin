@@ -9,5 +9,7 @@
     "gonic",
     "gorm",
     "Rctx",
+    "varchar",
+    "primarykey",
   ]
 }

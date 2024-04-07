@@ -25,35 +25,35 @@ type JsonErrorStruct struct {
 	Message interface{} `json:"message"`
 }
 
-func ReturnPageSuccess(ctx *gin.Context, code int, message interface{}, data interface{}, count int64) {
+func ReturnPageSuccess(c *gin.Context, code int, message interface{}, data interface{}, count int64) {
 	json := &PageStruct{
 		Code:    code,
 		Message: message,
 		Data:    data,
 		Count:   count,
 	}
-	ctx.JSON(200, json)
+	c.JSON(200, json)
 }
 
-func ReturnSuccess(ctx *gin.Context, code int, message interface{}, data interface{}) {
+func ReturnSuccess(c *gin.Context, code int, message interface{}, data interface{}) {
 	json := &JsonStruct{
 		Code:    code,
 		Message: message,
 		Data:    data,
 	}
-	ctx.JSON(200, json)
+	c.JSON(200, json)
 }
 
-func ReturnError(ctx *gin.Context, code int, message interface{}) {
+func ReturnError(c *gin.Context, code int, message interface{}) {
 	json := &JsonErrorStruct{
 		Code:    code,
 		Message: message,
 	}
-	ctx.JSON(200, json)
+	c.JSON(200, json)
 }
 
 func EncryptMd5(s string) string {
-	ctx := md5.New()
-	ctx.Write([]byte(s))
-	return hex.EncodeToString(ctx.Sum(nil))
+	c := md5.New()
+	c.Write([]byte(s))
+	return hex.EncodeToString(c.Sum(nil))
 }
