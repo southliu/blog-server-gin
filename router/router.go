@@ -2,7 +2,7 @@ package router
 
 import (
 	controllers "blog-gin/controllers/systems"
-	"blog-gin/pkg/logger"
+	"blog-gin/middleware"
 
 	"github.com/gin-gonic/gin"
 )
@@ -10,8 +10,8 @@ import (
 func Router() *gin.Engine {
 	r := gin.Default()
 
-	r.Use(gin.LoggerWithConfig(logger.LoggerToFile()))
-	r.Use(logger.Recover)
+	r.Use(gin.LoggerWithConfig(middleware.LoggerToFile()))
+	r.Use(middleware.Recover)
 
 	r.POST("/login", controllers.UserController{}.Login)
 	r.POST("/register", controllers.UserController{}.Register)

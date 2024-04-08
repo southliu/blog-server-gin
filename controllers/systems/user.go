@@ -1,21 +1,32 @@
 package controllers
 
 import (
+	"blog-gin/cache"
 	"blog-gin/controllers"
+	"blog-gin/middleware"
 	models "blog-gin/models/systems"
+	"strconv"
+	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/golang-jwt/jwt/v5"
 )
 
 type UserController struct{}
 
 type UserApi struct {
-	ID       int    `json:"id"`
-	Username string `json:"username"`
+	ID       int         `json:"id"`
+	Username string      `json:"username"`
+	Nickname string      `json:"nickname"`
+	Avatar   string      `json:"avatar"`
+	Email    string      `json:"email"`
+	Phone    string      `json:"phone"`
+	IsFrozen int         `json:"isFrozen"`
+	Token    interface{} `json:"token"`
 }
 
 func (UserController) GetPostForm(c *gin.Context) (models.User, error) {
-	var res models.User
+	var result models.User
 
 	username := c.DefaultPostForm("username", "")
 	password := c.DefaultPostForm("password", "")
@@ -26,10 +37,10 @@ func (UserController) GetPostForm(c *gin.Context) (models.User, error) {
 
 	if username == "" || password == "" {
 		controllers.ReturnError(c, 500, "请输入正确信息")
-		return res, gin.Error{}
+		return result, gin.Error{}
 	}
 
-	res = models.User{
+	result = models.User{
 		Username: username,
 		Password: controllers.EncryptMd5(password),
 		Avatar:   avatar,
@@ -37,14 +48,22 @@ func (UserController) GetPostForm(c *gin.Context) (models.User, error) {
 		Phone:    phone,
 		Nickname: nickname,
 	}
-	return res, nil
+	return result, nil
 }
 
-// func (UserController) ReturnUserApi(user models.User) UserApi {
-// 	var user UserApi
+func (UserController) ReturnUserApi(user models.User, token interface{}) UserApi {
+	result := UserApi{
+		Username: user.Username,
+		Nickname: user.Nickname,
+		Avatar:   user.Avatar,
+		Email:    user.Email,
+		Phone:    user.Phone,
+		IsFrozen: user.IsFrozen,
+		Token:    token,
+	}
 
-// 	return user
-// }
+	return result
+}
 
 func (UserController) Register(c *gin.Context) {
 	user, err := UserController{}.GetPostForm(c)
@@ -53,7 +72,7 @@ func (UserController) Register(c *gin.Context) {
 	}
 
 	configPassword := c.Copy().DefaultPostForm("configPassword", "")
-	if user.Password != configPassword {
+	if user.Password != controllers.EncryptMd5(configPassword) {
 		controllers.ReturnError(c, 500, "密码和确认密码不相同")
 		return
 	}
@@ -70,7 +89,7 @@ func (UserController) Register(c *gin.Context) {
 		return
 	}
 
-	controllers.ReturnSuccess(c, 200, "注册成功", user)
+	controllers.ReturnSuccess(c, 200, "注册成功", UserController{}.ReturnUserApi(user, nil))
 }
 
 func (UserController) Login(c *gin.Context) {
@@ -82,12 +101,28 @@ func (UserController) Login(c *gin.Context) {
 		controllers.ReturnError(c, 500, "用户不存在")
 		return
 	}
-	if password != controllers.EncryptMd5(user.Password) {
+	if controllers.EncryptMd5(password) != user.Password {
 		controllers.ReturnError(c, 500, "用户名或密码不正确")
 		return
 	}
 
-	// TODO: redis操作
+	cacheKey := "login:" + strconv.FormatUint(user.ID, 10)
+	cache.Rab.Set(cache.Rctx, cacheKey, "", 24*time.Hour)
 
-	controllers.ReturnSuccess(c, 200, "登录成功", user)
+	claims := middleware.JwtClaims{
+		Username: username,
+		RegisteredClaims: jwt.RegisteredClaims{
+			NotBefore: jwt.NewNumericDate(time.Now().Add(-60 * time.Second)),
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(24 * time.Hour)),
+			Issuer:    "south",
+		},
+	}
+	tokenStr, err := middleware.CreateJwt(claims)
+
+	if err != nil {
+		controllers.ReturnError(c, 500, "生成token失败:"+err.Error())
+		return
+	}
+
+	controllers.ReturnSuccess(c, 200, "登录成功", UserController{}.ReturnUserApi(user, tokenStr))
 }
