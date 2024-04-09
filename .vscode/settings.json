@@ -11,5 +11,7 @@
     "Rctx",
     "varchar",
     "primarykey",
+    "gormadapter",
+    "casbin",
   ]
 }

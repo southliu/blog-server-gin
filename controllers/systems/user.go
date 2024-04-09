@@ -106,9 +106,6 @@ func (UserController) Login(c *gin.Context) {
 		return
 	}
 
-	cacheKey := "login:" + strconv.FormatUint(user.ID, 10)
-	cache.Rab.Set(cache.Rctx, cacheKey, "", 24*time.Hour)
-
 	claims := middleware.JwtClaims{
 		Username: username,
 		RegisteredClaims: jwt.RegisteredClaims{
@@ -118,6 +115,9 @@ func (UserController) Login(c *gin.Context) {
 		},
 	}
 	tokenStr, err := middleware.CreateJwt(claims)
+
+	cacheKey := "login:" + strconv.FormatUint(user.ID, 10)
+	cache.Rab.Set(cache.Rctx, cacheKey, tokenStr, 24*time.Hour)
 
 	if err != nil {
 		controllers.ReturnError(c, 500, "生成token失败:"+err.Error())
