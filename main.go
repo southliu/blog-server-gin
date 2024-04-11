@@ -19,6 +19,8 @@ func main() {
 		&models.Menu{},
 		&models.Permission{},
 		&models.Role{},
+		&models.UserRole{},
+		&models.RolePermission{},
 	)
 	if err != nil {
 		println(err.Error())

@@ -10,6 +10,8 @@ type Permission struct {
 	Description string `json:"description" gorm:"column:description;type:varchar(100);comment:权限描述;"`
 	MenuId      int    `json:"-"`
 	global.GVA_Date_MODEL
+
+	Roles []*Role `json:"roles" gorm:"many2many:sys_role_permissions;"`
 }
 
 func (Permission) TableName() string {
