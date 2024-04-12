@@ -18,8 +18,6 @@ func main() {
 		&models.User{},
 		&models.Menu{},
 		&models.Role{},
-		&models.UserRole{},
-		&models.RoleMenu{},
 	)
 	if err != nil {
 		println(err.Error())

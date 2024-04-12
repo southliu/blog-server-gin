@@ -17,7 +17,7 @@ type User struct {
 	UserId   uint64 `json:"-" gorm:"comment:关联用户ID"`
 	global.GVA_Date_MODEL
 
-	Roles []*Role `gorm:"many2many:sys_user_roles;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
+	Roles []*Role `gorm:"many2many:sys_user_roles;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
 }
 
 type UserApi struct {

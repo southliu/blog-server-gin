@@ -17,7 +17,7 @@ type Menu struct {
 	PId        uint64 `json:"pid" gorm:"default:0;comment:父级ID"`
 	global.GVA_Date_MODEL
 
-	Roles []*Role `gorm:"many2many:sys_role_menus;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
+	Roles []*Role `gorm:"many2many:sys_role_menus;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
 }
 
 func (Menu) TableName() string {

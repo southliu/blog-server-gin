@@ -7,12 +7,11 @@ import (
 
 type Role struct {
 	global.GVA_MODEL
-	Name   string `json:"name" gorm:"type:varchar(50);comment:角色名;not null;" binding:"required"`
-	UserId uint64 `json:"-" gorm:"comment:关联用户ID"`
+	Name string `json:"name" gorm:"type:varchar(50);comment:角色名;not null;" binding:"required"`
 	global.GVA_Date_MODEL
 
-	Menus []*Menu `gorm:"many2many:sys_role_menus;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
-	Users []*User `gorm:"many2many:sys_user_roles;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
+	Menus []*Menu `gorm:"many2many:sys_role_menus;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
+	Users []*User `gorm:"many2many:sys_user_roles;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
 }
 
 func (*Role) TableName() string {
