@@ -17,10 +17,9 @@ func main() {
 	err := dao.Db.AutoMigrate(
 		&models.User{},
 		&models.Menu{},
-		&models.Permission{},
 		&models.Role{},
 		&models.UserRole{},
-		&models.RolePermission{},
+		&models.RoleMenu{},
 	)
 	if err != nil {
 		println(err.Error())

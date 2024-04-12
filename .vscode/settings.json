@@ -13,5 +13,6 @@
     "primarykey",
     "gormadapter",
     "casbin",
+    "tinyint",
   ]
 }

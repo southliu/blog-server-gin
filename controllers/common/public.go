@@ -5,6 +5,7 @@ import (
 	"blog-gin/controllers"
 	userControllers "blog-gin/controllers/systems"
 	"blog-gin/middleware"
+	"blog-gin/models/global"
 	models "blog-gin/models/systems"
 	"strconv"
 	"time"
@@ -14,62 +15,6 @@ import (
 )
 
 type PublicController struct{}
-
-func (*PublicController) Init(c *gin.Context) {
-	// 初始化角色
-	role1 := models.Role{
-		Name: "管理员角色",
-	}
-	role2 := models.Role{
-		Name: "游客角色",
-	}
-	// findRole1, _ := new(models.Role).GetRoleById(1)
-	// if findRole1.ID != 0 {
-	// 	controllers.ReturnError(c, 500, "角色存在")
-	// 	return
-	// }
-	// findRole2, _ := new(models.Role).GetRoleById(2)
-	// if findRole2.ID != 0 {
-	// 	controllers.ReturnError(c, 500, "角色存在")
-	// 	return
-	// }
-	newRole1, _ := new(models.Role).Create(role1)
-	newRole2, _ := new(models.Role).Create(role2)
-
-	// 初始化用户
-	user1 := models.User{
-		Username: "admin",
-		Password: "admin666",
-		Nickname: "管理员",
-	}
-	user1.Roles = append(user1.Roles, &newRole1)
-	user2 := models.User{
-		Username: "south",
-		Password: "south666",
-		Nickname: "游客",
-	}
-	user2.Roles = append(user2.Roles, &newRole2)
-	finUser1, _ := new(models.User).GetUserByUsername(user1.Username)
-	if finUser1.ID != 0 {
-		controllers.ReturnError(c, 500, "用户存在")
-		return
-	}
-
-	finUser2, _ := new(models.User).GetUserByUsername(user2.Username)
-	if finUser2.ID != 0 {
-		controllers.ReturnError(c, 500, "用户存在")
-		return
-	}
-
-	_, err := new(models.User).Create(user1)
-	if err != nil {
-		controllers.ReturnError(c, 500, err.Error())
-		return
-	}
-	new(models.User).Create(user2)
-
-	controllers.ReturnSuccess(c, 200, "success", "初始化成功")
-}
 
 func (*PublicController) Register(c *gin.Context) {
 	var userModel models.User
@@ -143,4 +88,97 @@ func (*PublicController) Login(c *gin.Context) {
 	}
 
 	controllers.ReturnSuccess(c, 200, "登录成功", new(userControllers.UserController).ReturnUserApi(user, tokenStr))
+}
+
+func (*PublicController) Init(c *gin.Context) {
+	menuData := []models.Menu{
+		{
+			GVA_MODEL: global.GVA_MODEL{
+				ID: 1,
+			},
+			Name:       "系统管理",
+			Type:       0,
+			SortNum:    1,
+			Permission: "/system",
+		},
+		{
+			GVA_MODEL: global.GVA_MODEL{
+				ID: 2,
+			},
+			PId:        1,
+			Name:       "菜单管理",
+			Type:       1,
+			SortNum:    1,
+			Route:      "/system/menu",
+			Permission: "/system/menu",
+		},
+		{PId: 2, Name: "菜单管理-查看", Type: 2, SortNum: 1, Permission: "/system/menu/index"},
+		{PId: 2, Name: "菜单管理-新增", Type: 2, SortNum: 2, Permission: "/system/menu/create"},
+		{PId: 2, Name: "菜单管理-编辑", Type: 2, SortNum: 3, Permission: "/system/menu/update"},
+		{PId: 2, Name: "菜单管理-删除", Type: 2, SortNum: 4, Permission: "/system/menu/delete"},
+	}
+	menus, err := new(models.Menu).BatchCreate(menuData)
+	if err != nil {
+		controllers.ReturnError(c, 500, err.Error())
+		return
+	}
+
+	// 初始化角色
+	role1 := models.Role{
+		GVA_MODEL: global.GVA_MODEL{ID: 1},
+		Name:      "管理员角色",
+	}
+	role2 := models.Role{
+		GVA_MODEL: global.GVA_MODEL{ID: 2},
+		Name:      "游客角色",
+	}
+	// findRole1, _ := new(models.Role).GetRoleById(1)
+	// if findRole1.ID != 0 {
+	// 	controllers.ReturnError(c, 500, "角色存在")
+	// 	return
+	// }
+	// findRole2, _ := new(models.Role).GetRoleById(2)
+	// if findRole2.ID != 0 {
+	// 	controllers.ReturnError(c, 500, "角色存在")
+	// 	return
+	// }
+
+	for _, value := range menus {
+		role2.Menus = append(role2.Menus, &value)
+	}
+	newRole1, _ := new(models.Role).Create(role1)
+	newRole2, _ := new(models.Role).Create(role2)
+
+	// 初始化用户
+	user1 := models.User{
+		Username: "admin",
+		Password: "admin666",
+		Nickname: "管理员",
+	}
+	user1.Roles = append(user1.Roles, &newRole1)
+	user2 := models.User{
+		Username: "south",
+		Password: "south666",
+		Nickname: "游客",
+	}
+	user2.Roles = append(user2.Roles, &newRole2)
+	// finUser1, _ := new(models.User).GetUserByUsername(user1.Username)
+	// if finUser1.ID != 0 {
+	// 	controllers.ReturnError(c, 500, "用户存在")
+	// 	return
+	// }
+	// finUser2, _ := new(models.User).GetUserByUsername(user2.Username)
+	// if finUser2.ID != 0 {
+	// 	controllers.ReturnError(c, 500, "用户存在")
+	// 	return
+	// }
+
+	new(models.User).Create(user1)
+	_, err = new(models.User).Create(user2)
+	if err != nil {
+		controllers.ReturnError(c, 500, err.Error())
+		return
+	}
+
+	controllers.ReturnSuccess(c, 200, "success", "初始化成功")
 }

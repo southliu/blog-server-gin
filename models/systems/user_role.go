@@ -6,9 +6,8 @@ import (
 
 type UserRole struct {
 	global.GVA_MODEL
-	UserId uint64 `gorm:"column:user_id;type:int;comment:关联用户ID"`
-	RoleId uint64 `gorm:"column:role_id;type:int;comment:关联角色ID"`
-	global.GVA_Middle_Date_MODEL
+	UserId uint64 `gorm:"index;comment:关联用户ID"`
+	RoleId uint64 `gorm:"index;comment:关联角色ID"`
 }
 
 func (*UserRole) TableName() string {
