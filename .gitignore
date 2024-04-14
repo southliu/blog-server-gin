@@ -21,3 +21,5 @@ bin
 main.exe~
 runtime/
 tmp/
+_
+_debug_*
