@@ -32,15 +32,17 @@ func (*UserController) GetPostForm(c *gin.Context) (models.User, error) {
 }
 
 /** 返回API数据 */
-func (UserController) ReturnUserApi(user models.User, token interface{}) models.UserApi {
+func (UserController) ReturnUserApi(user models.User, token interface{}, permissions []string) models.UserApi {
 	result := models.UserApi{
-		Username: user.Username,
-		Nickname: user.Nickname,
-		Avatar:   user.Avatar,
-		Email:    user.Email,
-		Phone:    user.Phone,
-		IsFrozen: user.IsFrozen,
-		Token:    token,
+		UserInfo: models.UserInfo{
+			Username: user.Username,
+			Nickname: user.Nickname,
+			Avatar:   user.Avatar,
+			Email:    user.Email,
+			Phone:    user.Phone,
+		},
+		Permissions: permissions,
+		Token:       token,
 	}
 
 	return result

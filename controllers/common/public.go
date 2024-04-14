@@ -46,31 +46,49 @@ func (*PublicController) Register(c *gin.Context) {
 		return
 	}
 
-	controllers.ReturnSuccess(c, 200, "注册成功", new(userControllers.UserController).ReturnUserApi(user, nil))
+	controllers.ReturnSuccess(c, 200, "注册成功", new(userControllers.UserController).ReturnUserApi(user, nil, nil))
 }
 
 func (*PublicController) Login(c *gin.Context) {
 	var userModel models.User
-	username := c.DefaultPostForm("username", "")
-	password := c.DefaultPostForm("password", "")
+	var search models.User
+	c.ShouldBindJSON(&search)
 
-	if username == "" || password == "" {
-		controllers.ReturnError(c, 500, "请输入正确信息")
+	if search.Username == "" || search.Password == "" {
+		controllers.ReturnError(c, 500, search)
 		return
 	}
 
-	user, _ := userModel.GetUserByUsername(username)
+	user, _ := userModel.GetUserByUsername(search.Username)
 	if user.ID == 0 {
 		controllers.ReturnError(c, 500, "用户不存在")
 		return
 	}
-	if controllers.EncryptMd5(password) != user.Password {
+	if controllers.EncryptMd5(search.Password) != user.Password {
 		controllers.ReturnError(c, 500, "用户名或密码不正确")
 		return
 	}
 
+	// 获取改用户下面的角色
+	roles, err := new(models.User).GetRoleByUsername(search.Username)
+	if err != nil {
+		controllers.ReturnError(c, 500, "获取角色信息失败")
+		return
+	}
+
+	var permissions []string
+	for _, role := range roles {
+		rolePermissions, _ := new(models.Role).GetPermissionById(role.ID)
+		// newPermissions := make([]string, len(permissions)+len(rolePermissions))
+		// copy(newPermissions, permissions)
+
+		for _, permission := range rolePermissions {
+			permissions = append(permissions, permission)
+		}
+	}
+
 	claims := middleware.JwtClaims{
-		Username: username,
+		Username: search.Username,
 		RegisteredClaims: jwt.RegisteredClaims{
 			NotBefore: jwt.NewNumericDate(time.Now().Add(-60 * time.Second)),
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(24 * time.Hour)),
@@ -87,7 +105,12 @@ func (*PublicController) Login(c *gin.Context) {
 		return
 	}
 
-	controllers.ReturnSuccess(c, 200, "登录成功", new(userControllers.UserController).ReturnUserApi(user, tokenStr))
+	controllers.ReturnSuccess(
+		c,
+		200,
+		"登录成功",
+		new(userControllers.UserController).ReturnUserApi(user, tokenStr, permissions),
+	)
 }
 
 func (*PublicController) Init(c *gin.Context) {
@@ -132,19 +155,21 @@ func (*PublicController) Init(c *gin.Context) {
 		GVA_MODEL: global.GVA_MODEL{ID: 2},
 		Name:      "游客角色",
 	}
-	// findRole1, _ := new(models.Role).GetRoleById(1)
-	// if findRole1.ID != 0 {
-	// 	controllers.ReturnError(c, 500, "角色存在")
-	// 	return
-	// }
-	// findRole2, _ := new(models.Role).GetRoleById(2)
-	// if findRole2.ID != 0 {
-	// 	controllers.ReturnError(c, 500, "角色存在")
-	// 	return
-	// }
+	findRole1, _ := new(models.Role).GetRoleById(1)
+	if findRole1.ID != 0 {
+		controllers.ReturnError(c, 500, "角色存在")
+		return
+	}
+	findRole2, _ := new(models.Role).GetRoleById(2)
+	if findRole2.ID != 0 {
+		controllers.ReturnError(c, 500, "角色存在")
+		return
+	}
 
+	// newMenus := make([]models.Menu, len(role1.Menus)+len(menus))
+	// copy(newMenus, role1.Menus)
 	for _, value := range menus {
-		role2.Menus = append(role2.Menus, &value)
+		role1.Menus = append(role1.Menus, value)
 	}
 	newRole1, _ := new(models.Role).Create(role1)
 	newRole2, _ := new(models.Role).Create(role2)
@@ -152,26 +177,26 @@ func (*PublicController) Init(c *gin.Context) {
 	// 初始化用户
 	user1 := models.User{
 		Username: "admin",
-		Password: "admin666",
+		Password: controllers.EncryptMd5("admin123456"),
 		Nickname: "管理员",
 	}
-	user1.Roles = append(user1.Roles, &newRole1)
+	user1.Roles = append(user1.Roles, newRole1)
 	user2 := models.User{
 		Username: "south",
-		Password: "south666",
+		Password: controllers.EncryptMd5("south123456"),
 		Nickname: "游客",
 	}
-	user2.Roles = append(user2.Roles, &newRole2)
-	// finUser1, _ := new(models.User).GetUserByUsername(user1.Username)
-	// if finUser1.ID != 0 {
-	// 	controllers.ReturnError(c, 500, "用户存在")
-	// 	return
-	// }
-	// finUser2, _ := new(models.User).GetUserByUsername(user2.Username)
-	// if finUser2.ID != 0 {
-	// 	controllers.ReturnError(c, 500, "用户存在")
-	// 	return
-	// }
+	user2.Roles = append(user2.Roles, newRole2)
+	finUser1, _ := new(models.User).GetUserByUsername(user1.Username)
+	if finUser1.ID != 0 {
+		controllers.ReturnError(c, 500, "用户存在")
+		return
+	}
+	finUser2, _ := new(models.User).GetUserByUsername(user2.Username)
+	if finUser2.ID != 0 {
+		controllers.ReturnError(c, 500, "用户存在")
+		return
+	}
 
 	new(models.User).Create(user1)
 	_, err = new(models.User).Create(user2)

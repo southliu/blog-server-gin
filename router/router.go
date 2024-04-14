@@ -20,6 +20,10 @@ func Router() *gin.Engine {
 
 	systems := r.Group("/systems")
 	{
+		menu := systems.Group("/menu")
+		{
+			menu.GET("/page", new(sysControllers.MenuController).GetMenuPage)
+		}
 		role := systems.Group("/role")
 		{
 			role.POST("/create", new(sysControllers.RoleController).Create)

@@ -14,21 +14,28 @@ type User struct {
 	Email    string `json:"email" gorm:"type:varchar(100);comment:邮箱"`
 	Phone    string `json:"phone" gorm:"type:varchar(100);comment:电话"`
 	IsFrozen int    `json:"isFrozen" gorm:"default:0;comment:是否冻结 0正常 1冻结"`
-	UserId   uint64 `json:"-" gorm:"comment:关联用户ID"`
-	global.GVA_Date_MODEL
+	global.GVA_DATE_MODEL
 
-	Roles []*Role `gorm:"many2many:sys_user_roles;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
+	Roles []Role `gorm:"many2many:sys_user_roles;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
+}
+
+type UserInfo struct {
+	ID       int    `json:"id"`
+	Username string `json:"username"`
+	Nickname string `json:"nickname"`
+	Avatar   string `json:"avatar"`
+	Email    string `json:"email"`
+	Phone    string `json:"phone"`
 }
 
 type UserApi struct {
-	ID       int         `json:"id"`
-	Username string      `json:"username"`
-	Nickname string      `json:"nickname"`
-	Avatar   string      `json:"avatar"`
-	Email    string      `json:"email"`
-	Phone    string      `json:"phone"`
-	IsFrozen int         `json:"isFrozen"`
-	Token    interface{} `json:"token"`
+	UserInfo    `json:"userInfo"`
+	Permissions []string    `json:"permissions"`
+	Token       interface{} `json:"token"`
+}
+
+type UserPageSearch struct {
+	global.PAGE_MODEL
 }
 
 func (User) TableName() string {
@@ -49,4 +56,19 @@ func (*User) GetUserByUsername(username string) (User, error) {
 	var user User
 	err := dao.Db.Unscoped().Where("username = ?", username).First(&user).Error
 	return user, err
+}
+
+func (*User) GetUserPage(search UserPageSearch) ([]User, error) {
+	var list []User
+	page := search.PAGE_MODEL.Page
+	pageSize := search.PAGE_MODEL.PageSize
+	offset := (page - 1) * pageSize
+	err := dao.Db.Offset(offset).Limit(pageSize).Find(&list).Error
+	return list, err
+}
+
+func (*User) GetRoleByUsername(username string) ([]Role, error) {
+	var user User
+	err := dao.Db.Unscoped().Preload("Roles").Where("username = ?", username).First(&user).Error
+	return user.Roles, err
 }
