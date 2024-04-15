@@ -5,7 +5,8 @@ import (
 )
 
 type JwtClaims struct {
-	Username string `json:"username"`
+	Username string   `json:"username"`
+	Roles    []uint64 `json:"roles"`
 	jwt.RegisteredClaims
 }
 
@@ -18,11 +19,13 @@ func CreateJwt(claims jwt.Claims) (string, error) {
 }
 
 func GetJwtInfo(tokenString string) interface{} {
-	token, err := jwt.ParseWithClaims(tokenString, &JwtClaims{}, func(token *jwt.Token) (interface{}, error) {
+	tokenStringLen := len(tokenString)
+	newTokenString := tokenString[7:tokenStringLen]
+	token, err := jwt.ParseWithClaims(newTokenString, &JwtClaims{}, func(token *jwt.Token) (interface{}, error) {
 		return []byte("IAmSouth"), nil
 	})
 	if err != nil {
-		return nil
+		return err.Error()
 	} else if claims, ok := token.Claims.(*JwtClaims); ok {
 		return claims
 	}

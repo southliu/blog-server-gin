@@ -51,44 +51,47 @@ func (*PublicController) Register(c *gin.Context) {
 
 func (*PublicController) Login(c *gin.Context) {
 	var userModel models.User
-	var search models.User
-	c.ShouldBindJSON(&search)
+	var userInfo models.User
+	c.ShouldBindJSON(&userInfo)
 
-	if search.Username == "" || search.Password == "" {
-		controllers.ReturnError(c, 500, search)
+	if userInfo.Username == "" || userInfo.Password == "" {
+		controllers.ReturnError(c, 500, userInfo)
 		return
 	}
 
-	user, _ := userModel.GetUserByUsername(search.Username)
+	user, _ := userModel.GetUserByUsername(userInfo.Username)
 	if user.ID == 0 {
 		controllers.ReturnError(c, 500, "用户不存在")
 		return
 	}
-	if controllers.EncryptMd5(search.Password) != user.Password {
+	if controllers.EncryptMd5(userInfo.Password) != user.Password {
 		controllers.ReturnError(c, 500, "用户名或密码不正确")
 		return
 	}
 
 	// 获取改用户下面的角色
-	roles, err := new(models.User).GetRoleByUsername(search.Username)
+	roles, err := new(models.User).GetRoleByUsername(userInfo.Username)
 	if err != nil {
 		controllers.ReturnError(c, 500, "获取角色信息失败")
 		return
 	}
 
+	var roleTokens []uint64
 	var permissions []string
 	for _, role := range roles {
 		rolePermissions, _ := new(models.Role).GetPermissionById(role.ID)
-		// newPermissions := make([]string, len(permissions)+len(rolePermissions))
-		// copy(newPermissions, permissions)
+		roleTokens = append(roleTokens, role.ID)
 
 		for _, permission := range rolePermissions {
-			permissions = append(permissions, permission)
+			if permission != "" {
+				permissions = append(permissions, permission)
+			}
 		}
 	}
 
 	claims := middleware.JwtClaims{
-		Username: search.Username,
+		Username: userInfo.Username,
+		Roles:    roleTokens,
 		RegisteredClaims: jwt.RegisteredClaims{
 			NotBefore: jwt.NewNumericDate(time.Now().Add(-60 * time.Second)),
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(24 * time.Hour)),
@@ -113,13 +116,55 @@ func (*PublicController) Login(c *gin.Context) {
 	)
 }
 
+// 刷新权限
+func (*PublicController) RefreshPermission(c *gin.Context) {
+	authHeader := c.Request.Header.Get("Authorization")
+	authHeaderLen := len(authHeader)
+	tokenStr := authHeader[7:authHeaderLen]
+
+	tokenInfo := middleware.GetJwtInfo(authHeader)
+	username := tokenInfo.(*middleware.JwtClaims).Username
+
+	// 获取用户
+	user, err := new(models.User).GetUserByUsername(username)
+	if err != nil {
+		controllers.ReturnError(c, 500, "获取用户信息失败")
+		return
+	}
+
+	// 获取改用户下面的角色
+	roles, err := new(models.User).GetRoleByUsername(username)
+	if err != nil {
+		controllers.ReturnError(c, 500, "获取角色信息失败")
+		return
+	}
+
+	var permissions []string
+	for _, role := range roles {
+		rolePermissions, _ := new(models.Role).GetPermissionById(role.ID)
+		for _, permission := range rolePermissions {
+			if permission != "" {
+				permissions = append(permissions, permission)
+			}
+		}
+	}
+
+	controllers.ReturnSuccess(
+		c,
+		200,
+		"登录成功",
+		new(userControllers.UserController).ReturnUserApi(user, tokenStr, permissions),
+	)
+}
+
 func (*PublicController) Init(c *gin.Context) {
 	menuData := []models.Menu{
 		{
 			GVA_MODEL: global.GVA_MODEL{
 				ID: 1,
 			},
-			Name:       "系统管理",
+			Label:      "系统管理",
+			LabelEn:    "system",
 			Type:       0,
 			SortNum:    1,
 			Permission: "/system",
@@ -129,16 +174,17 @@ func (*PublicController) Init(c *gin.Context) {
 				ID: 2,
 			},
 			PId:        1,
-			Name:       "菜单管理",
+			Label:      "菜单管理",
+			LabelEn:    "menu",
 			Type:       1,
 			SortNum:    1,
 			Route:      "/system/menu",
 			Permission: "/system/menu",
 		},
-		{PId: 2, Name: "菜单管理-查看", Type: 2, SortNum: 1, Permission: "/system/menu/index"},
-		{PId: 2, Name: "菜单管理-新增", Type: 2, SortNum: 2, Permission: "/system/menu/create"},
-		{PId: 2, Name: "菜单管理-编辑", Type: 2, SortNum: 3, Permission: "/system/menu/update"},
-		{PId: 2, Name: "菜单管理-删除", Type: 2, SortNum: 4, Permission: "/system/menu/delete"},
+		{PId: 2, Label: "菜单管理-查看", Type: 2, SortNum: 1, Permission: "/system/menu/index"},
+		{PId: 2, Label: "菜单管理-新增", Type: 2, SortNum: 2, Permission: "/system/menu/create"},
+		{PId: 2, Label: "菜单管理-编辑", Type: 2, SortNum: 3, Permission: "/system/menu/update"},
+		{PId: 2, Label: "菜单管理-删除", Type: 2, SortNum: 4, Permission: "/system/menu/delete"},
 	}
 	menus, err := new(models.Menu).BatchCreate(menuData)
 	if err != nil {
@@ -166,10 +212,10 @@ func (*PublicController) Init(c *gin.Context) {
 		return
 	}
 
-	// newMenus := make([]models.Menu, len(role1.Menus)+len(menus))
-	// copy(newMenus, role1.Menus)
 	for _, value := range menus {
-		role1.Menus = append(role1.Menus, value)
+		if value.ID != 0 {
+			role1.Menus = append(role1.Menus, value)
+		}
 	}
 	newRole1, _ := new(models.Role).Create(role1)
 	newRole2, _ := new(models.Role).Create(role2)

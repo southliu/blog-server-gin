@@ -27,27 +27,27 @@ func Write(msg string, filename string) {
 
 func Debug(fields logrus.Fields, args ...interface{}) {
 	setOutPutFile(logrus.DebugLevel, "debug")
-	logrus.WithFields(fields).Debug(args)
+	logrus.WithFields(fields).Debug(args...)
 }
 
 func Info(fields logrus.Fields, args ...interface{}) {
 	setOutPutFile(logrus.InfoLevel, "info")
-	logrus.WithFields(fields).Info(args)
+	logrus.WithFields(fields).Info(args...)
 }
 
 func Warn(fields logrus.Fields, args ...interface{}) {
 	setOutPutFile(logrus.WarnLevel, "warn")
-	logrus.WithFields(fields).Warn(args)
+	logrus.WithFields(fields).Warn(args...)
 }
 
 func Fatal(fields logrus.Fields, args ...interface{}) {
 	setOutPutFile(logrus.FatalLevel, "fatal")
-	logrus.WithFields(fields).Fatal(args)
+	logrus.WithFields(fields).Fatal(args...)
 }
 
 func Error(fields logrus.Fields, args ...interface{}) {
 	setOutPutFile(logrus.ErrorLevel, "error")
-	logrus.WithFields(fields).Error(args)
+	logrus.WithFields(fields).Error(args...)
 }
 
 func setOutPutFile(level logrus.Level, logName string) {
