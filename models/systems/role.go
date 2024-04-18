@@ -18,12 +18,12 @@ func (*Role) TableName() string {
 	return "sys_roles"
 }
 
-func (*Role) Create(role Role) (Role, error) {
+func (*Role) Create(role *Role) (*Role, error) {
 	err := dao.Db.Create(&role).Error
 	return role, err
 }
 
-func (*Role) BatchCreate(roles []Role) ([]Role, error) {
+func (*Role) BatchCreate(roles []*Role) ([]*Role, error) {
 	err := dao.Db.Create(&roles).Error
 	return roles, err
 }

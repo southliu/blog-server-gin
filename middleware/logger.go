@@ -131,7 +131,7 @@ func Recover(c *gin.Context) {
 			f.WriteString(fmt.Sprintf("%v", err) + "\n")
 			f.WriteString("stacktrace from panic:" + string(debug.Stack()) + "\n")
 			f.Close()
-			c.JSON(http.StatusOK, gin.H{"code": 500, "msg": fmt.Sprintf("%v", err)})
+			c.JSON(http.StatusOK, gin.H{"code": 500, "message": fmt.Sprintf("%v", err)})
 			//终止后续接口调用，不加的话recover异常之后，还会继续执行后续代码
 			c.Abort()
 		}

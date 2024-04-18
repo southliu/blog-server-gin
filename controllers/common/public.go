@@ -40,7 +40,7 @@ func (*PublicController) Register(c *gin.Context) {
 		return
 	}
 
-	_, err = userModel.Create(user)
+	_, err = userModel.Create(&user)
 	if err != nil {
 		controllers.ReturnError(c, 500, "注册失败，请联系管理员")
 		return
@@ -52,7 +52,10 @@ func (*PublicController) Register(c *gin.Context) {
 func (*PublicController) Login(c *gin.Context) {
 	var userModel models.User
 	var userInfo models.User
-	c.ShouldBindJSON(&userInfo)
+	if err := c.ShouldBindJSON(&userInfo); err != nil {
+		controllers.ReturnError(c, 500, "请输入正确信息")
+		return
+	}
 
 	if userInfo.Username == "" || userInfo.Password == "" {
 		controllers.ReturnError(c, 500, userInfo)
@@ -122,7 +125,11 @@ func (*PublicController) RefreshPermission(c *gin.Context) {
 	authHeaderLen := len(authHeader)
 	tokenStr := authHeader[7:authHeaderLen]
 
-	tokenInfo := middleware.GetJwtInfo(authHeader)
+	tokenInfo, err := middleware.GetJwtInfo(authHeader)
+	if err != nil {
+		controllers.ReturnError(c, 401, "当前权限已失效，请重新登录")
+		return
+	}
 	username := tokenInfo.(*middleware.JwtClaims).Username
 
 	// 获取用户
@@ -158,7 +165,7 @@ func (*PublicController) RefreshPermission(c *gin.Context) {
 }
 
 func (*PublicController) Init(c *gin.Context) {
-	menuData := []models.Menu{
+	menuData := []*models.Menu{
 		{
 			GVA_MODEL: global.GVA_MODEL{
 				ID: 1,
@@ -214,11 +221,11 @@ func (*PublicController) Init(c *gin.Context) {
 
 	for _, value := range menus {
 		if value.ID != 0 {
-			role1.Menus = append(role1.Menus, value)
+			role1.Menus = append(role1.Menus, *value)
 		}
 	}
-	newRole1, _ := new(models.Role).Create(role1)
-	newRole2, _ := new(models.Role).Create(role2)
+	newRole1, _ := new(models.Role).Create(&role1)
+	newRole2, _ := new(models.Role).Create(&role2)
 
 	// 初始化用户
 	user1 := models.User{
@@ -226,13 +233,13 @@ func (*PublicController) Init(c *gin.Context) {
 		Password: controllers.EncryptMd5("admin123456"),
 		Nickname: "管理员",
 	}
-	user1.Roles = append(user1.Roles, newRole1)
+	user1.Roles = append(user1.Roles, *newRole1)
 	user2 := models.User{
 		Username: "south",
 		Password: controllers.EncryptMd5("south123456"),
 		Nickname: "游客",
 	}
-	user2.Roles = append(user2.Roles, newRole2)
+	user2.Roles = append(user2.Roles, *newRole2)
 	finUser1, _ := new(models.User).GetUserByUsername(user1.Username)
 	if finUser1.ID != 0 {
 		controllers.ReturnError(c, 500, "用户存在")
@@ -244,8 +251,8 @@ func (*PublicController) Init(c *gin.Context) {
 		return
 	}
 
-	new(models.User).Create(user1)
-	_, err = new(models.User).Create(user2)
+	new(models.User).Create(&user1)
+	_, err = new(models.User).Create(&user2)
 	if err != nil {
 		controllers.ReturnError(c, 500, err.Error())
 		return

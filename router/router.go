@@ -25,6 +25,8 @@ func Router() *gin.Engine {
 		{
 			menu.GET("/page", new(sysControllers.MenuController).GetMenuPage)
 			menu.GET("/list", new(sysControllers.MenuController).GetMenuList)
+			menu.GET("/detail", new(sysControllers.MenuController).GetMenuById)
+			menu.PUT("/:id", new(sysControllers.MenuController).Update)
 		}
 		role := systems.Group("/role")
 		{

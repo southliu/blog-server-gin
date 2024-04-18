@@ -31,12 +31,12 @@ func (Menu) TableName() string {
 	return "sys_menus"
 }
 
-func (*Menu) Create(menu Menu) (Menu, error) {
+func (*Menu) Create(menu *Menu) (*Menu, error) {
 	err := dao.Db.Create(&menu).Error
 	return menu, err
 }
 
-func (*Menu) BatchCreate(menus []Menu) ([]Menu, error) {
+func (*Menu) BatchCreate(menus []*Menu) ([]*Menu, error) {
 	err := dao.Db.Create(&menus).Error
 	return menus, err
 }
@@ -46,18 +46,29 @@ func (*Menu) GetMenuPage(search MenuPageSearch) ([]Menu, error) {
 	page := search.PAGE_MODEL.Page
 	pageSize := search.PAGE_MODEL.PageSize
 	offset := (page - 1) * pageSize
-	err := dao.Db.Offset(offset).Limit(pageSize).Find(&list).Error
+	err := dao.Db.Unscoped().Offset(offset).Limit(pageSize).Find(&list).Error
 	return list, err
 }
 
 func (*Menu) GetMenuList(roleIds []uint64) ([]Menu, error) {
 	var roles []Role
 	var menus []Menu
-	err := dao.Db.Model(&Role{}).Preload("Menus").Where("id IN ?", roleIds).Find(&roles).Error
+	err := dao.Db.Unscoped().Model(&Role{}).Preload("Menus").Where("id IN ?", roleIds).Find(&roles).Error
 	if err == nil {
 		for _, role := range roles {
 			menus = append(menus, role.Menus...)
 		}
 	}
 	return menus, err
+}
+
+func (*Menu) GetMenuById(id uint64) (Menu, error) {
+	var menu Menu
+	err := dao.Db.Unscoped().Where("id = ?", id).First(&menu).Error
+	return menu, err
+}
+
+func (*Menu) Update(id uint64, menu *Menu) (*Menu, error) {
+	err := dao.Db.Model(Menu{}).Where("id = ?", id).Updates(&menu).Error
+	return menu, err
 }

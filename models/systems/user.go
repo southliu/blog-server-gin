@@ -42,12 +42,12 @@ func (User) TableName() string {
 	return "sys_users"
 }
 
-func (*User) Create(user User) (User, error) {
+func (*User) Create(user *User) (*User, error) {
 	err := dao.Db.Create(&user).Error
 	return user, err
 }
 
-func (*User) BatchCreate(users []User) ([]User, error) {
+func (*User) BatchCreate(users []*User) ([]*User, error) {
 	err := dao.Db.Create(&users).Error
 	return users, err
 }

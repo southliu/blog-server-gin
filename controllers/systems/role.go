@@ -13,7 +13,7 @@ func (*RoleController) Create(c *gin.Context) {
 	var role models.Role
 	name := c.DefaultPostForm("name", "")
 	role.Name = name
-	_, err := role.Create(role)
+	_, err := role.Create(&role)
 
 	if err != nil {
 		controllers.ReturnError(c, 500, "新增失败，请联系管理员")

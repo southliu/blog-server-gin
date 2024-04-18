@@ -22,4 +22,4 @@ main.exe~
 runtime/
 tmp/
 _
-_debug_*
+__debug_*.exe
