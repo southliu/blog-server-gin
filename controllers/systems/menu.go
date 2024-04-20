@@ -110,5 +110,26 @@ func (*MenuController) Update(c *gin.Context) {
 		controllers.ReturnError(c, 500, "修改菜单失败")
 		return
 	}
-	controllers.ReturnSuccess(c, 200, "success", result)
+	controllers.ReturnSuccess(c, 200, "修改成功", result)
+}
+
+func (*MenuController) Delete(c *gin.Context) {
+	idStr := c.Param("id")
+	if idStr == "" {
+		controllers.ReturnError(c, 500, "请输入ID")
+		return
+	}
+
+	id, err := strconv.ParseUint(idStr, 10, 64)
+	if err != nil {
+		controllers.ReturnError(c, 500, "请正确ID")
+		return
+	}
+
+	err = new(models.Menu).Delete(id)
+	if err != nil {
+		controllers.ReturnError(c, 500, "修改菜单失败"+err.Error())
+		return
+	}
+	controllers.ReturnSuccess(c, 200, "删除成功", "")
 }
