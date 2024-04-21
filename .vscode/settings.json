@@ -14,5 +14,6 @@
     "gormadapter",
     "casbin",
     "tinyint",
+    "Xtime",
   ]
 }
