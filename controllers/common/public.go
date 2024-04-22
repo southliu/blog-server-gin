@@ -94,6 +94,7 @@ func (*PublicController) Login(c *gin.Context) {
 
 	claims := middleware.JwtClaims{
 		Username: userInfo.Username,
+		UserId:   userInfo.ID,
 		Roles:    roleTokens,
 		RegisteredClaims: jwt.RegisteredClaims{
 			NotBefore: jwt.NewNumericDate(time.Now().Add(-60 * time.Second)),
@@ -226,6 +227,11 @@ func (*PublicController) Init(c *gin.Context) {
 	}
 	newRole1, _ := new(models.Role).Create(&role1)
 	newRole2, _ := new(models.Role).Create(&role2)
+
+	roleIdStr := strconv.FormatUint(newRole1.ID, 10)
+
+	middleware.Casbin.AddPolicy(roleIdStr, "/systems/menu/list", "GET")
+	middleware.Casbin.AddPolicy(roleIdStr, "/systems/menu/detail", "GET")
 
 	// 初始化用户
 	user1 := models.User{
