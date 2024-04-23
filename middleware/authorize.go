@@ -34,26 +34,13 @@ func init() {
 	Casbin.SavePolicy()
 }
 
-type Whitelist struct {
-	Url string
-	Act string
-}
-
 func Authorize(c *gin.Context) {
 	// 获取请求URI
 	url := c.Request.URL.Path
 	// 获取请求方法
 	act := c.Request.Method
 
-	// 白名单
-	whitelists := []Whitelist{
-		{Url: "/login", Act: "POST"},
-		{Url: "/register", Act: "POST"},
-		{Url: "/init", Act: "GET"},
-		{Url: "/refresh-permissions", Act: "GET"},
-	}
-
-	for _, item := range whitelists {
+	for _, item := range config.Whitelists {
 		if url == item.Url && act == item.Act {
 			c.Next()
 			return

@@ -157,11 +157,13 @@ func (*PublicController) RefreshPermission(c *gin.Context) {
 		}
 	}
 
+	result := new(userControllers.UserController).ReturnUserApi(user, tokenStr, permissions)
+
 	controllers.ReturnSuccess(
 		c,
 		200,
 		"登录成功",
-		new(userControllers.UserController).ReturnUserApi(user, tokenStr, permissions),
+		result,
 	)
 }
 
@@ -200,6 +202,13 @@ func (*PublicController) Init(c *gin.Context) {
 		return
 	}
 
+	// Casbin权限
+	middleware.Casbin.AddPolicy("/system/menu/index", "/systems/menu/list", "GET")
+	middleware.Casbin.AddPolicy("/system/menu/index", "/systems/menu/detail", "GET")
+	middleware.Casbin.AddPolicy("/system/menu/create", "/systems/menu", "POST")
+	middleware.Casbin.AddPolicy("/system/menu/update", "/systems/menu", "PUT")
+	middleware.Casbin.AddPolicy("/system/menu/delete", "/systems/menu", "DELETE")
+
 	// 初始化角色
 	role1 := models.Role{
 		GVA_MODEL: global.GVA_MODEL{ID: 1},
@@ -227,11 +236,6 @@ func (*PublicController) Init(c *gin.Context) {
 	}
 	newRole1, _ := new(models.Role).Create(&role1)
 	newRole2, _ := new(models.Role).Create(&role2)
-
-	roleIdStr := strconv.FormatUint(newRole1.ID, 10)
-
-	middleware.Casbin.AddPolicy(roleIdStr, "/systems/menu/list", "GET")
-	middleware.Casbin.AddPolicy(roleIdStr, "/systems/menu/detail", "GET")
 
 	// 初始化用户
 	user1 := models.User{

@@ -2,7 +2,6 @@ package controllers
 
 import (
 	"blog-gin/controllers"
-	"blog-gin/middleware"
 	"blog-gin/models/global"
 	models "blog-gin/models/systems"
 	"strconv"
@@ -44,13 +43,8 @@ func (*MenuController) BuildTree(menus []models.Menu, pID uint64, isAll bool) []
 }
 
 func (*MenuController) GetMenuList(c *gin.Context) {
-	authHeader := c.Request.Header.Get("Authorization")
-	tokenInfo, err := middleware.GetJwtInfo(authHeader)
-	if err != nil {
-		controllers.ReturnError(c, 401, "当前权限已失效，请重新登录")
-		return
-	}
-	roles := tokenInfo.(*middleware.JwtClaims).Roles
+	_roles, _ := c.Get("roles")
+	roles := _roles.([]uint64)
 
 	isAllStr := c.DefaultQuery("isAll", "false")
 	isAll := isAllStr == "true"

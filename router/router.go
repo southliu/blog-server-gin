@@ -13,6 +13,7 @@ func Router() *gin.Engine {
 
 	r.Use(gin.LoggerWithConfig(middleware.LoggerToFile()))
 	r.Use(middleware.Recover)
+	r.Use(middleware.JwtAuth)
 	r.Use(middleware.Authorize)
 
 	r.GET("/init", new(commonControllers.PublicController).Init)
