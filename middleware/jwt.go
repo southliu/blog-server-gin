@@ -9,9 +9,10 @@ import (
 )
 
 type JwtClaims struct {
-	UserId   uint64   `json:"userId"`
-	Username string   `json:"username"`
-	Roles    []uint64 `json:"roles"`
+	UserId      uint64   `json:"userId"`
+	Username    string   `json:"username"`
+	Roles       []uint64 `json:"roles"`
+	Permissions []string `json:"permissions"`
 	jwt.RegisteredClaims
 }
 
@@ -39,9 +40,11 @@ func JwtAuth(c *gin.Context) {
 	userId := tokenInfo.(*JwtClaims).UserId
 	username := tokenInfo.(*JwtClaims).Username
 	roles := tokenInfo.(*JwtClaims).Roles
+	permissions := tokenInfo.(*JwtClaims).Permissions
 	c.Set("userId", userId)
 	c.Set("username", username)
 	c.Set("roles", roles)
+	c.Set("permissions", permissions)
 
 	c.Next()
 }

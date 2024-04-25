@@ -80,6 +80,38 @@ func (*MenuController) GetMenuById(c *gin.Context) {
 	controllers.ReturnSuccess(c, 200, "success", result)
 }
 
+func (*MenuController) Create(c *gin.Context) {
+	var menu models.Menu
+
+	if err := c.ShouldBindJSON(&menu); err != nil {
+		controllers.ReturnError(c, 500, "请输入正确信息")
+		return
+	}
+
+	// 获取角色数据
+	_roles, _ := c.Get("roles")
+	roles := _roles.([]uint64)
+
+	for _, role := range roles {
+		roleData, err := new(models.Role).GetRoleById(role)
+
+		if err != nil {
+			controllers.ReturnError(c, 500, "新增菜单失败，无法获取对应角色数据")
+			return
+		}
+
+		menu.Roles = append(menu.Roles, roleData)
+	}
+
+	result, err := new(models.Menu).Create(&menu)
+	if err != nil {
+		controllers.ReturnError(c, 500, "新增菜单失败")
+		return
+	}
+
+	controllers.ReturnSuccess(c, 200, "新增成功", result)
+}
+
 func (*MenuController) Update(c *gin.Context) {
 	var menu models.Menu
 	idStr := c.Param("id")

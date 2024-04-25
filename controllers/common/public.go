@@ -93,9 +93,10 @@ func (*PublicController) Login(c *gin.Context) {
 	}
 
 	claims := middleware.JwtClaims{
-		Username: userInfo.Username,
-		UserId:   userInfo.ID,
-		Roles:    roleTokens,
+		Username:    userInfo.Username,
+		UserId:      userInfo.ID,
+		Roles:       roleTokens,
+		Permissions: permissions,
 		RegisteredClaims: jwt.RegisteredClaims{
 			NotBefore: jwt.NewNumericDate(time.Now().Add(-60 * time.Second)),
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(24 * time.Hour)),
@@ -191,10 +192,46 @@ func (*PublicController) Init(c *gin.Context) {
 			Route:      "/system/menu",
 			Permission: "/system/menu",
 		},
-		{PId: 2, Label: "菜单管理-查看", Type: 2, SortNum: 1, Permission: "/system/menu/index"},
-		{PId: 2, Label: "菜单管理-新增", Type: 2, SortNum: 2, Permission: "/system/menu/create"},
-		{PId: 2, Label: "菜单管理-编辑", Type: 2, SortNum: 3, Permission: "/system/menu/update"},
-		{PId: 2, Label: "菜单管理-删除", Type: 2, SortNum: 4, Permission: "/system/menu/delete"},
+		{
+			GVA_MODEL: global.GVA_MODEL{
+				ID: 3,
+			},
+			PId:        2,
+			Label:      "菜单管理-查看",
+			Type:       2,
+			SortNum:    1,
+			Permission: "/system/menu/search",
+		},
+		{
+			GVA_MODEL: global.GVA_MODEL{
+				ID: 4,
+			},
+			PId:        2,
+			Label:      "菜单管理-新增",
+			Type:       2,
+			SortNum:    2,
+			Permission: "/system/menu/create",
+		},
+		{
+			GVA_MODEL: global.GVA_MODEL{
+				ID: 5,
+			},
+			PId:        2,
+			Label:      "菜单管理-编辑",
+			Type:       2,
+			SortNum:    3,
+			Permission: "/system/menu/update",
+		},
+		{
+			GVA_MODEL: global.GVA_MODEL{
+				ID: 6,
+			},
+			PId:        2,
+			Label:      "菜单管理-删除",
+			Type:       2,
+			SortNum:    4,
+			Permission: "/system/menu/delete",
+		},
 	}
 	menus, err := new(models.Menu).BatchCreate(menuData)
 	if err != nil {
@@ -202,12 +239,21 @@ func (*PublicController) Init(c *gin.Context) {
 		return
 	}
 
+	menuResources := []*models.MenuResource{
+		{MenuId: 3, Method: "GET", Path: "/systems/menu/list"},
+		{MenuId: 3, Method: "GET", Path: "/systems/menu/detail"},
+		{MenuId: 4, Method: "POST", Path: "/systems/menu"},
+		{MenuId: 5, Method: "PUT", Path: "/systems/menu"},
+		{MenuId: 6, Method: "DELETE", Path: "/systems/menu"},
+	}
+	new(models.MenuResource).BatchCreate(menuResources)
+
 	// Casbin权限
-	middleware.Casbin.AddPolicy("/system/menu/index", "/systems/menu/list", "GET")
-	middleware.Casbin.AddPolicy("/system/menu/index", "/systems/menu/detail", "GET")
+	middleware.Casbin.AddPolicy("/system/menu/search", "/systems/menu/list", "GET")
+	middleware.Casbin.AddPolicy("/system/menu/search", "/systems/menu/detail", "GET")
 	middleware.Casbin.AddPolicy("/system/menu/create", "/systems/menu", "POST")
-	middleware.Casbin.AddPolicy("/system/menu/update", "/systems/menu", "PUT")
-	middleware.Casbin.AddPolicy("/system/menu/delete", "/systems/menu", "DELETE")
+	middleware.Casbin.AddPolicy("/system/menu/update", "/systems/menu/{id}", "PUT")
+	middleware.Casbin.AddPolicy("/system/menu/delete", "/systems/menu/{id}", "DELETE")
 
 	// 初始化角色
 	role1 := models.Role{

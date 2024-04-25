@@ -14,13 +14,14 @@ type Menu struct {
 	Icon       string `json:"icon" gorm:"type:varchar(100);comment:图标"`
 	SortNum    int    `json:"sortNum" gorm:"type:tinyint;comment:排序"`
 	Enable     int    `json:"enable" gorm:"type:tinyint;default:1;comment:是否启用 0禁用 1启用"`
-	Permission string `json:"permission" gorm:"type:varchar(200);comment:权限"`
+	Permission string `json:"permission" gorm:"type:varchar(255);comment:权限"`
 	PId        uint64 `json:"pid" gorm:"default:0;comment:父级ID"`
 	Key        string `json:"key" gorm:"-"`
 	Children   []Menu `json:"children" gorm:"-"`
 	global.GVA_DATE_MODEL
 
-	Roles []Role `json:"roles" gorm:"many2many:sys_role_menus;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
+	MenuResource []MenuResource `json:"menuResource" gorm:"-"`
+	Roles        []Role         `json:"roles" gorm:"many2many:sys_role_menus;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
 }
 
 type MenuPageSearch struct {

@@ -12,6 +12,7 @@ import (
 func main() {
 	err := dao.Db.AutoMigrate(
 		&models.User{},
+		&models.MenuResource{},
 		&models.Menu{},
 		&models.Role{},
 	)

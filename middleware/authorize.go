@@ -5,7 +5,6 @@ import (
 	"blog-gin/controllers"
 	"fmt"
 	"log"
-	"strconv"
 
 	"github.com/casbin/casbin/v2"
 	gormadapter "github.com/casbin/gorm-adapter/v3"
@@ -30,8 +29,6 @@ func init() {
 	}
 
 	Casbin.LoadPolicy()
-	Casbin.Enforce("alice", "data1", "read")
-	Casbin.SavePolicy()
 }
 
 func Authorize(c *gin.Context) {
@@ -55,15 +52,17 @@ func Authorize(c *gin.Context) {
 		return
 	}
 
-	roles := tokenInfo.(*JwtClaims).Roles
-	roleIdStr := strconv.FormatUint(roles[0], 10)
+	permissions := tokenInfo.(*JwtClaims).Permissions
 
-	if ok, _ := Casbin.Enforce(roleIdStr, url, act); ok {
-		fmt.Println("权限通过" + act + url)
-		c.Next()
-	} else {
-		fmt.Println("权限未通过" + act + url)
-		controllers.ReturnError(c, 500, "当前用户无权访问，请重新登录尝试！")
-		c.Abort()
+	for _, permission := range permissions {
+		if ok, _ := Casbin.Enforce(permission, url, act); ok {
+			fmt.Println("权限通过" + act + url)
+			c.Next()
+			return
+		}
 	}
+
+	fmt.Println("权限未通过" + act + url)
+	controllers.ReturnError(c, 500, "当前用户无权访问，请重新登录尝试！")
+	c.Abort()
 }
