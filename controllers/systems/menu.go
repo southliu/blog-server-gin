@@ -49,12 +49,30 @@ func (*MenuController) GetMenuList(c *gin.Context) {
 	isAllStr := c.DefaultQuery("isAll", "false")
 	isAll := isAllStr == "true"
 
+	isMenuSelectStr := c.DefaultQuery("isMenuSelect", "false")
+	isMenuSelect := isMenuSelectStr == "true"
+
 	menus, err := new(models.Menu).GetMenuList(roles)
 	if err != nil {
 		controllers.ReturnError(c, 500, "获取菜单列表失败")
 		return
 	}
 	result := new(MenuController).BuildTree(menus, 0, isAll)
+
+	if isMenuSelect {
+		result = []models.Menu{
+			{
+				GVA_MODEL: global.GVA_MODEL{
+					ID: 0,
+				},
+				Label:    "顶级菜单",
+				SortNum:  0,
+				Enable:   1,
+				Children: result,
+			},
+		}
+	}
+
 	controllers.ReturnSuccess(c, 200, "success", result)
 }
 
